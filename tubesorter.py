@@ -130,8 +130,10 @@ def file_tube():
 
 
         pygame.draw.rect(screen, cloud, lastFiled_rect)
-        fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: " + str(lastFiled[3]) , lastFiled_rect, purple, "left", "center")
-        # fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: ", lastFiled_rect, purple, "left", "center")
+        try:
+            fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: " + str(lastFiled[3]) , lastFiled_rect, purple, "left", "center")
+        except:
+            fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: ", lastFiled_rect, purple, "left", "center")
         
         fontMgr.Draw(screen, 'Droid Sans', 16, "Location:", subtitle_rect, cloud, 'left', 'center')
         pygame.draw.rect(screen, cloud, accn_rect)
