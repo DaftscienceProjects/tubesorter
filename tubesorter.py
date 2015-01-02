@@ -74,7 +74,7 @@ def osk():
       for event in events:
          if event.type == pygame.QUIT:
             run = False
-         elif event.type == pygame.MOUSEBUTTONDOWN:
+         elif event.type == pygame.MOUSBUTTONUP:
             mouse = pygame.mouse.get_pos()
             for btn in keyboard:
                if btn.obj.collidepoint(mouse):
@@ -156,7 +156,7 @@ def file_tube():
                 if event.key == K_RETURN: 
                   databaseFunctions.fileAccn(accn)
                   txtbx.value = ''
-             elif event.type == pygame.MOUSEBUTTONDOWN:
+             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
                 if exit.obj.collidepoint(mouse):
                    pygame.mouse.set_pos(0,0)
@@ -191,7 +191,7 @@ def main_menu():
       for event in pygame.event.get():
          if event.type == pygame.QUIT:
             return
-         elif event.type == pygame.MOUSEBUTTONDOWN:
+         elif event.type == pygame.MOUSEBUTTONUP:
             mouse = pygame.mouse.get_pos()
             if fileTube.obj.collidepoint(mouse):
                print('file pressed')
