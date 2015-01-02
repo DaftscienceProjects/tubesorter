@@ -74,7 +74,7 @@ def osk():
       for event in events:
          if event.type == pygame.QUIT:
             run = False
-         elif event.type == pygame.MOUSBUTTONUP:
+         elif event.type == pygame.MOUSEBUTTONUP:
             mouse = pygame.mouse.get_pos()
             for btn in keyboard:
                if btn.obj.collidepoint(mouse):
