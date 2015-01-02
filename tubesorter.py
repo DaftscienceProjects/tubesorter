@@ -21,9 +21,9 @@ sys.dont_write_bytecode = True
 
 
 
-os.putenv("SDL_FBDEV", "/dev/fb1")
-os.putenv('SDL_MOUSEDRV', 'TSLIB')
-os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+# os.putenv("SDL_FBDEV", "/dev/fb1")
+# os.putenv('SDL_MOUSEDRV', 'TSLIB')
+# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 pygame.init()
 
 display_width = 320
