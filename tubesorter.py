@@ -2,28 +2,28 @@ import pygame, os, time, random, sys, eztext, databaseFunctions
 from tubesorter_UI import *
 from font import *
 import RPi.GPIO as GPIO
-from piTFT import PiTFT_GPIO
+from piTFT import *
+from label import Label
 
 
+pitft = PiTFT_Screen()
 
-pitft = PiTFT_GPIO()
 
-def backlight_Off(argument):
-    pitft.Backlight(False)
-def backlight_On(argument):
-  pitft.Backlight(True)
+pitft.Button1Interrupt(pitft.backlight_off)
+pitft.Button2Interrupt(pitft.backlight_low)
+pitft.Button3Interrupt(pitft.backlight_med)
+pitft.Button4Interrupt(pitft.backlight_high)
 
-pitft.Button4Interrupt(backlight_On)
-pitft.Button3Interrupt(backlight_Off)
+
 
 sys.dont_write_bytecode = True
 
 
 
 
-# os.putenv("SDL_FBDEV", "/dev/fb1")
-# os.putenv('SDL_MOUSEDRV', 'TSLIB')
-# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+os.putenv("SDL_FBDEV", "/dev/fb1")
+os.putenv('SDL_MOUSEDRV', 'TSLIB')
+os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 pygame.init()
 
 display_width = 320
@@ -100,7 +100,7 @@ def file_tube():
     mouse = pygame.mouse.get_pos()
 
 
-    title_rect = pygame.Rect(0, 25, 320, 50)
+    # title_rect = pygame.Rect(0, 25, 320, 50)
     accn = ''
     txtbx = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=0, y=95)
     exit= my_button('Exit', (170, 185,  130, 40,), (125,103))
@@ -110,7 +110,7 @@ def file_tube():
     lastFiled_rect = pygame.Rect(0, 0, 320, 20)
     accn_rect = (0, 95, 320, 30)
 
-    update_Rects = [subtitle_rect, lastFiled_rect, title_rect, accn_rect]
+    update_Rects = [subtitle_rect, lastFiled_rect, accn_rect]
 
 
     OSk_BTN.draw(screen, mouse)
@@ -142,8 +142,8 @@ def file_tube():
 
         pygame.draw.rect(screen, cloud, accn_rect)
         txtbx.draw(screen)
-        pygame.draw.rect(screen, purple, title_rect)
-        fontMgr.Draw(screen, 'DejaVu Sans', 24, 'File Tube', title_rect, cloud, 'center', 'center')
+        # pygame.draw.rect(screen, purple, title_rect)
+        # fontMgr.Draw(screen, 'DejaVu Sans', 24, 'File Tube', title_rect, cloud, 'center', 'center')
         pygame.draw.rect(screen, purple, subtitle_rect)
         fontMgr.Draw(screen, 'Droid Sans Mono', 12, location, subtitle_rect, cloud, 'center', 'center')
         
@@ -176,19 +176,29 @@ def locate_tube():
 
 
 def main_menu():
-   fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
-   locateTube  = my_button('Locate',   (170, 125,  130, 40,), (125,133))
-   settings    = my_button('Settings', (20,  185,  130, 40,), (125,163))
-   exit        = my_button('Exit',     (170, 185,  130, 40,), (125,103))
+    background = pygame.Surface(screen.get_size())
+    fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
+    locateTube  = my_button('Locate',   (170, 125,  130, 40,), (125,133))
+    settings    = my_button('Settings', (20,  185,  130, 40,), (125,163))
+    exit        = my_button('Exit',     (170, 185,  130, 40,), (125,103))
    # screen_surface = pygame.display.get_surface()
 
-   screen.fill(cloud)
-
-   title_rect = pygame.Rect(0, 25, 320, 50)
-   subtitle_rect = pygame.Rect(0, 75, 320, 20)
+    screen.fill(cloud)
 
 
-   while True:
+
+    title = Label(text="Tube Sorter", bg_color=purple, font_color=cloud, font=None, size=24)
+    sub_title = Label()
+    sub_title.text ="wtf mate"
+    allSprites = pygame.sprite.Group(title, sub_title)
+
+     # def __init__(self, text=None, bg_color=cloud, font_color=purple, font=None, size=12):
+
+   # title_rect = pygame.Rect(0, 25, 320, 50)
+   # subtitle_rect = pygame.Rect(0, 75, 320, 20)
+
+
+    while True:
       mouse = pygame.mouse.get_pos()
       for event in pygame.event.get():
          if event.type == pygame.QUIT:
@@ -208,22 +218,30 @@ def main_menu():
                print('exit pressed')
                return
 
-      pygame.draw.rect(screen, purple, title_rect)
-      fontMgr.Draw(screen, 'DejaVu Sans', 24, 'Tube Sorter', title_rect, cloud, 'center', 'center')
+      # pygame.draw.rect(screen, purple, title_rect)
+      # fontMgr.Draw(screen, 'DejaVu Sans', 24, 'Tube Sorter', title_rect, cloud, 'center', 'center')
 
-      pygame.draw.rect(screen, purple, subtitle_rect)
-      fontMgr.Draw(screen, 'DejaVu Sans', 16, 'Version 1.0b', subtitle_rect, cloud, 'right', 'top')
+      # pygame.draw.rect(screen, purple, subtitle_rect)
+      # fontMgr.Draw(screen, 'DejaVu Sans', 16, 'Version 1.0b', subtitle_rect, cloud, 'right', 'top')
 
-      if debug: draw_FPS(screen, debug_rect, fontMgr, clock)
+      # if debug: draw_FPS(screen, debug_rect, fontMgr, clock)
 
       fileTube.draw(    screen, mouse)
       locateTube.draw(  screen, mouse)
       settings.draw(    screen, mouse)
       exit.draw(        screen, mouse)
-      
+
+
+
+      allSprites.clear(screen, background)
+      allSprites.update()
+      allSprites.draw(screen)
+
+
+
       pygame.display.flip()
-      # pygame.display.update()
-      pygame.event.wait
+      pygame.display.update()
+      # pygame.event.wait
 
 if __name__ == '__main__':
    main_menu()
