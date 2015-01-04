@@ -1,14 +1,15 @@
 import pygame, os, time, random, sys, eztext, databaseFunctions
 from tubesorter_UI import *
-from font import *
+# from font import *
 import RPi.GPIO as GPIO
 from piTFT import *
 from label import Label
 
 
+# Initialize touchscreen
 pitft = PiTFT_Screen()
 
-
+# define touchscreen buttons
 pitft.Button1Interrupt(pitft.backlight_off)
 pitft.Button2Interrupt(pitft.backlight_low)
 pitft.Button3Interrupt(pitft.backlight_med)
@@ -16,28 +17,22 @@ pitft.Button4Interrupt(pitft.backlight_high)
 
 
 
-sys.dont_write_bytecode = True
+# sys.dont_write_bytecode = True
 
-
-
-
+# set video and input to pitft
 os.putenv("SDL_FBDEV", "/dev/fb1")
 os.putenv('SDL_MOUSEDRV', 'TSLIB')
 os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
-pygame.init()
 
+
+
+# initialize pygame and global variables
+pygame.init()
 display_width = 320
 display_height = 240
-
 pygame.mouse.set_visible(False)
-
-debug = False
-if debug:
-   pygame.mouse.set_visible(True)
-   debug_rect = pygame.Rect(270, 0, 50, 35)
-
-fontMgr = cFontManager(((None, 24), (None, 48), ('DejaVu Sans', 24), ('Droid Sans Mono', 12), ('Droid Sans', 16), ('DejaVu Sans Mono', 12), ('DejaVu Sans', 16)))
 screen = pygame.display.set_mode((display_width, display_height))
+background = pygame.Surface(screen.get_size())
 clock = pygame.time.Clock()
 
 
@@ -62,7 +57,7 @@ def osk():
 
    for btn in keyboard:
         btn.draw(screen, pygame.mouse.get_pos())
-   txtbx = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=0, y=0)
+   accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
    inp = ''
    exit.draw(screen, mouse)
    enter.draw(screen, mouse)
@@ -79,77 +74,70 @@ def osk():
             for btn in keyboard:
                if btn.obj.collidepoint(mouse):
                   inp = inp + btn.value
-                  txtbx.value = inp
+                  accn_input.value = inp
             if enter.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
                screen.fill(cloud)
-               return txtbx.value
+               return accn_input.value
             if exit.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
                screen.fill(cloud)
                return
-      accn = txtbx.update(events)
-      txtbx.draw(screen)
+      accn = accn_input.update(events)
+      accn_input.draw(screen)
 
       pygame.display.flip()
       pygame.event.wait
 
 def file_tube():
+    accn = ''
     pygame.mouse.set_pos(0,0)
     screen.fill(cloud)
     mouse = pygame.mouse.get_pos()
-
-
-    # title_rect = pygame.Rect(0, 25, 320, 50)
-    accn = ''
-    txtbx = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=0, y=95)
+    
     exit= my_button('Exit', (170, 185,  130, 40,), (125,103))
     OSk_BTN = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
+    
+    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
+    
+    title_text = Label(screen, 
+                  text="File Tube",
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 40,
+                  background_size=(background.get_width(), 60),
+                  center=(background.get_width()/2, 60))
+    location_text = Label(screen,
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 20,
+                  background_size=(background.get_width(), 25),
+                  center=(background.get_width()/2, 90), 
+                  align="center")
 
-    subtitle_rect = pygame.Rect(0, 75, 320, 20)
-    lastFiled_rect = pygame.Rect(0, 0, 320, 20)
-    accn_rect = (0, 95, 320, 30)
 
-    update_Rects = [subtitle_rect, lastFiled_rect, accn_rect]
-
-
-    OSk_BTN.draw(screen, mouse)
-    exit.draw(screen, mouse)
-    pygame.display.update()
+    allSprites = pygame.sprite.OrderedUpdates(title_text, location_text)
 
     run = True
+
     while run:
         events = pygame.event.get()
         lastFiled = databaseFunctions.lastFiled()
-        accn = txtbx.update(events)
-        
-        
+        accn = accn_input.update(events)
+                
         loc = databaseFunctions.locateNext()
-        pygame.draw.rect(screen, purple, subtitle_rect)
-        location = loc[3] + loc[0] + ": " + ROWS[loc[2]]  + "-" + loc[1]
+        location_text.text = "Scan tube, then place here: "+ loc[3] + loc[0] + ": " + ROWS[loc[2]]  + "-" + loc[1]
 
+        accn_input.draw(screen)
 
-        pygame.draw.rect(screen, cloud, lastFiled_rect)
-        try:
-            fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: " + str(lastFiled[3]) , lastFiled_rect, purple, "left", "center")
-        except:
-            fontMgr.Draw(screen, 'Droid Sans', 16, "Last Filed: ", lastFiled_rect, purple, "left", "center")
-        
-        fontMgr.Draw(screen, 'Droid Sans', 16, "Location:", subtitle_rect, cloud, 'left', 'center')
-        pygame.draw.rect(screen, cloud, accn_rect)
-        
-        
+        allSprites.clear(screen, background)
+        allSprites.update()
+        allSprites.draw(screen)
 
-        pygame.draw.rect(screen, cloud, accn_rect)
-        txtbx.draw(screen)
-        # pygame.draw.rect(screen, purple, title_rect)
-        # fontMgr.Draw(screen, 'DejaVu Sans', 24, 'File Tube', title_rect, cloud, 'center', 'center')
-        pygame.draw.rect(screen, purple, subtitle_rect)
-        fontMgr.Draw(screen, 'Droid Sans Mono', 12, location, subtitle_rect, cloud, 'center', 'center')
-        
+        OSk_BTN.draw(screen, mouse)
+        exit.draw(screen, mouse)
+        pygame.display.flip()
 
-
-        pygame.display.update(update_Rects)
         pygame.event.wait
         for event in events:
              if event.type == pygame.QUIT:
@@ -157,7 +145,7 @@ def file_tube():
              elif event.type == pygame.KEYDOWN:
                 if event.key == K_RETURN: 
                   databaseFunctions.fileAccn(accn)
-                  txtbx.value = ''
+                  accn_input.value = ''
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
                 if exit.obj.collidepoint(mouse):
@@ -167,36 +155,39 @@ def file_tube():
                 elif OSk_BTN.obj.collidepoint(mouse):
                     accn = osk()
                     databaseFunctions.fileAccn(accn)
-                    txtbx.value = ''
-                    OSk_BTN.draw(screen, mouse)
-                    exit.draw(screen, mouse)
-                    pygame.display.update()
+                    accn_input.value = ''
 def locate_tube():
  pass
 
 
 def main_menu():
-    background = pygame.Surface(screen.get_size())
+    
+    
     fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
     locateTube  = my_button('Locate',   (170, 125,  130, 40,), (125,133))
     settings    = my_button('Settings', (20,  185,  130, 40,), (125,163))
     exit        = my_button('Exit',     (170, 185,  130, 40,), (125,103))
-   # screen_surface = pygame.display.get_surface()
-
+    
     screen.fill(cloud)
 
+    title = Label(screen, 
+                  text="Pi-Tube Ledger",
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 40,
+                  background_size=(background.get_width(), 60),
+                  center=(background.get_width()/2, 60))
+    sub_title = Label(screen, 
+                  text="beta  ",
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 20,
+                  background_size=(background.get_width(), 25),
+                  center=(background.get_width()/2, 90), 
+                  align="right")
 
 
-    title = Label(text="Tube Sorter", bg_color=purple, font_color=cloud, font=None, size=24)
-    sub_title = Label()
-    sub_title.text ="wtf mate"
-    allSprites = pygame.sprite.Group(title, sub_title)
-
-     # def __init__(self, text=None, bg_color=cloud, font_color=purple, font=None, size=12):
-
-   # title_rect = pygame.Rect(0, 25, 320, 50)
-   # subtitle_rect = pygame.Rect(0, 75, 320, 20)
-
+    allSprites = pygame.sprite.OrderedUpdates(title, sub_title)
 
     while True:
       mouse = pygame.mouse.get_pos()
@@ -218,14 +209,6 @@ def main_menu():
                print('exit pressed')
                return
 
-      # pygame.draw.rect(screen, purple, title_rect)
-      # fontMgr.Draw(screen, 'DejaVu Sans', 24, 'Tube Sorter', title_rect, cloud, 'center', 'center')
-
-      # pygame.draw.rect(screen, purple, subtitle_rect)
-      # fontMgr.Draw(screen, 'DejaVu Sans', 16, 'Version 1.0b', subtitle_rect, cloud, 'right', 'top')
-
-      # if debug: draw_FPS(screen, debug_rect, fontMgr, clock)
-
       fileTube.draw(    screen, mouse)
       locateTube.draw(  screen, mouse)
       settings.draw(    screen, mouse)
@@ -240,8 +223,6 @@ def main_menu():
 
 
       pygame.display.flip()
-      pygame.display.update()
-      # pygame.event.wait
 
 if __name__ == '__main__':
    main_menu()

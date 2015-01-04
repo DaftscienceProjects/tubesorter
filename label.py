@@ -4,43 +4,62 @@
 import pygame
 # pygame.init()
 
-# screen = pygame.display.set_mode((640, 480))    
-red = (231, 76, 60)
-blue = (52, 152, 219)
-teal = (26, 188, 156)
-purple = (155, 89, 182)
-green = (46, 204, 113)
-orange = (230, 126, 34)
-yellow = (241, 196, 15)
-cloud = (236, 240, 241)
-asphalt = (52, 73, 94)
-concrete = (149, 165, 166)
+# screen = pygame.display.set_mode((640, 480)) 
+from tubesorter_UI import red, blue, teal, purple, green, orange, yellow, cloud, asphalt, concrete   
+
 
 class Label(pygame.sprite.Sprite):
-    """ a basic label 
-        properties: 
-            text: text to display
-            fgColor: foreground color
-            bgColor: background color
-            center: position of label's center
-    """
-    
-    def __init__(self, text=None, bg_color=cloud, font_color=purple, font=None, size=24):
+
+    def __init__(   self, 
+                    screen,
+                    text=None, 
+                    bg_color=cloud, 
+                    font_color=purple, 
+                    font=None, 
+                    font_size=24, 
+                    background_size=None, 
+                    center=None, 
+                    align="Center"):
+
+        self.screen = screen
         pygame.sprite.Sprite.__init__(self)
-        self.font = pygame.font.SysFont(font, size)
+        self.background = pygame.Surface(self.screen.get_size())
+        self.font = pygame.font.SysFont(font, font_size)
         self.text = text
         self.fgColor = font_color
         self.bgColor = bg_color
-        self.center = (100, 100)
-        self.size = (150, 30)
+        self.align = align
+
+        if center:
+            self.center = center
+        else:
+            self.center = (self.background.get_width()/2, self.background.get_height()/2)
+        
+        if background_size:
+            self.size = background_size
+        else:    
+            self.size = (self.background.get_width(), 20)
+            
+        
 
     def update(self):
         self.image = pygame.Surface(self.size)
         self.image.fill(self.bgColor)
         fontSurface = self.font.render(self.text, True, self.fgColor, self.bgColor)
-        #center the text
-        xPos = (self.image.get_width() - fontSurface.get_width())/2
-        
-        self.image.blit(fontSurface, (xPos, 0))
+        if self.align =='left':
+            fontRect = fontSurface.get_rect()
+            bg_rect = self.image.get_rect()
+            fontRect.left = bg_rect.left
+            self.image.blit(fontSurface, fontRect)
+        elif self.align =='right':
+            fontRect = fontSurface.get_rect()
+            bg_rect = self.image.get_rect()
+            fontRect.right = bg_rect.right
+            self.image.blit(fontSurface, fontRect)
+        else:
+            xPos = (self.image.get_width() - fontSurface.get_width())/2
+            yPos = (self.image.get_height() - fontSurface.get_height())/2
+            self.image.blit(fontSurface, (xPos, yPos))
+
         self.rect = self.image.get_rect()
         self.rect.center = self.center

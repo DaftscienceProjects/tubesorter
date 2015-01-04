@@ -24,19 +24,19 @@ ROWS = {'1':'A',
         '11':'K',
         '12':'L'}
 
-
-def draw_FPS(screen, debug_rect, fontMgr, clock):
-   pygame.draw.rect(screen, cloud, debug_rect) 
-   fontMgr.Draw(screen, 'DejaVu Sans Mono', 12, str(round(clock.get_fps(), 2)), debug_rect, asphalt, 'center', 'center')
-
-
 def quitgame():
     pygame.quit()
     quit()
 
-class tube_location_string:
-  def __init__(self, text, rect):
-    pass
+
+
+
+
+
+
+
+
+
 
 class my_button:
     # label_coord may not be needed anymore
