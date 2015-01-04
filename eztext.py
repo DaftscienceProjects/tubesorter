@@ -1,6 +1,8 @@
 # input lib
 from pygame.locals import *
 import pygame, string
+import sys
+sys.dont_write_bytecode = True
 
 class ConfigError(KeyError): pass
 

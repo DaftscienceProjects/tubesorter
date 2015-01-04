@@ -1,4 +1,7 @@
 import pygame
+import sys
+
+sys.dont_write_bytecode = True
 
 red = (231, 76, 60)
 blue = (52, 152, 219)

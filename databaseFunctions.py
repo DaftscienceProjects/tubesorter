@@ -2,6 +2,9 @@ import sqlite3
 import datetime
 import orderedset
 from time import gmtime, strftime
+import sys
+sys.dont_write_bytecode = True
+
 
 ROWS = {'1':'A',
         '2':'B',

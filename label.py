@@ -1,12 +1,8 @@
-""" labelDemo.py
-    creating a basic label sprite"""
-    
-import pygame
-# pygame.init()
-
-# screen = pygame.display.set_mode((640, 480)) 
+import pygame 
 from tubesorter_UI import red, blue, teal, purple, green, orange, yellow, cloud, asphalt, concrete   
+import sys
 
+sys.dont_write_bytecode = True
 
 class Label(pygame.sprite.Sprite):
 
