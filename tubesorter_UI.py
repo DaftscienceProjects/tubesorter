@@ -27,6 +27,9 @@ ROWS = {'1':'A',
         '11':'K',
         '12':'L'}
 
+
+
+
 def quitgame():
     pygame.quit()
     quit()
@@ -45,14 +48,10 @@ class my_button:
     # label_coord may not be needed anymore
     def __init__(self, text, rect_coord, label_coord, font_color=asphalt, color=orange, value=None):
       self.text = text
-      self.is_hover = False
       self.rect_coord = rect_coord
       self.label_coord = label_coord
-      self.is_clicked = False
       self.value = value
       self.default_color = color
-      self.hover_color = blue
-      self.clicked_color = blue
       self.font_color = font_color
       self.obj = None
       
@@ -64,39 +63,38 @@ class my_button:
         textRect = self.label().get_rect()
         textRect.center = ((self.rect_coord[0]+(self.rect_coord[2]/2)), (self.rect_coord[1]+(self.rect_coord[3]/2)))
         return textRect
-
-    def color(self):
-      if self.is_clicked:
-         return self.clicked_color
-      else:
-         return self.default_color
          
-    def draw(self, screen, mouse):
+    def draw(self, screen):
       # print "drawn"
-      self.obj  = pygame.draw.rect(screen, self.color(), self.rect_coord)
+      self.obj  = pygame.draw.rect(screen, self.default_color, self.rect_coord)
       screen.blit(self.label(), self.label_rect())
-      self.check_hover(mouse)
-      
-    def check_hover(self, mouse):
-      if self.obj.collidepoint(mouse):
-         self.is_hover = True 
-      else:
-         self.is_hover = False
-    def clicked():
-      self.clicked = True
-      self.draw()
+    
 
 
 
-class keyboard:
-  def __init__(self, value):
-    self.one =    my_button('1', (20,  75, 50, 50), (125,103))
-    self.two =    my_button('2', (71,  75, 50, 50), (125,103))
-    self.three =  my_button('3', (122, 75, 50, 50), (125,103))
-    self.four =   my_button('4', (20,  126, 50, 50), (125,103))
-    self.five =   my_button('5', (71,  126, 50, 50), (125,103))
-    self.six =    my_button('6', (122, 126, 50, 50), (125,103))
-    self.seven =  my_button('7', (20,  178, 50, 50), (125,103))
-    self.eight =  my_button('8', (71,  178, 50, 50), (125,103))
-    self.nine =   my_button('9', (122, 178, 50, 50), (125,103))
-    self.zero =   my_button('0', (71,  229, 50, 50), (125,103))
+# class keyboard:
+#   def __init__(self, value):
+#     self.one =    my_button('1', (20,  75, 50, 50), (125,103))
+#     self.two =    my_button('2', (71,  75, 50, 50), (125,103))
+#     self.three =  my_button('3', (122, 75, 50, 50), (125,103))
+#     self.four =   my_button('4', (20,  126, 50, 50), (125,103))
+#     self.five =   my_button('5', (71,  126, 50, 50), (125,103))
+#     self.six =    my_button('6', (122, 126, 50, 50), (125,103))
+#     self.seven =  my_button('7', (20,  178, 50, 50), (125,103))
+#     self.eight =  my_button('8', (71,  178, 50, 50), (125,103))
+#     self.nine =   my_button('9', (122, 178, 50, 50), (125,103))
+#     self.zero =   my_button('0', (71,  229, 50, 50), (125,103))
+
+
+OSK_Keyboard_Buttons = [ 
+            my_button('1', (65,   35,  60, 50), (125,103), value='1'),
+            my_button('2', (126,  35,  60, 50), (125,103), value='2'),
+            my_button('3', (187,  35,  60, 50), (125,103), value='3'),
+            my_button('4', (65,   86,  60, 50), (125,103), value='4'),
+            my_button('5', (126,  86,  60, 50), (125,103), value='5'),
+            my_button('6', (187,  86,  60, 50), (125,103), value='6'),
+            my_button('7', (65,   137, 60, 50), (125,103), value='7'),
+            my_button('8', (126,  137, 60, 50), (125,103), value='8'),
+            my_button('9', (187,  137, 60, 50), (125,103), value='9'),
+            my_button('0', (126,  188, 60, 50), (125,103), value='0'), 
+          ]

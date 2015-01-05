@@ -65,6 +65,7 @@ class PiTFT_Screen(object):
         subprocess.call(set_duty, shell=True)
 
     def set_backlight_brightness(self, duty):
+        print "brightness Changed"
         set_duty = 'echo '+str(duty)+' > /sys/class/rpi-pwm/pwm0/duty'
         subprocess.call(set_duty, shell=True)
 
