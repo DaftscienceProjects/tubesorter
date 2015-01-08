@@ -1,8 +1,8 @@
-import pymongo
+import sqlite3
 import sys
 import datetime
 from pprint import pprint
-from pymongo import MongoClient
+from time import gmtime, strftime
 sys.dont_write_bytecode = True
 ROWS = {'1':'A',
         '2':'B',
@@ -164,9 +164,6 @@ def fileAccn(accn):
   db.commit()
   db.close()
 
-
-#findAccn('012546308014')
-test  = 0
 def testDB():
   test = 0
   accn = "012546308014"
@@ -178,7 +175,10 @@ def testDB():
   cursor = db.execute('SELECT max(id) FROM ' + today)
   max_id = cursor.fetchone()[0]
 
+if __name__ == '__main__':
+  testDB()
+  fileAccn("test")
+  pprint(findAccn("test"))
 
-#testDB()
 
 
