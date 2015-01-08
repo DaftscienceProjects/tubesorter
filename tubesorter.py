@@ -1,15 +1,13 @@
 import pygame, os, time, random, sys, eztext, databaseFunctions
 from tubesorter_UI import *
-from pygame.locals import *
+# from font import *
 import RPi.GPIO as GPIO
 from piTFT import *
 from label import Label
 
-debugging = True
-if debugging: print 'debugging mode'
+
 # Initialize touchscreen
 pitft = PiTFT_Screen()
-pitft.backlight_med
 
 # define touchscreen buttons
 pitft.Button1Interrupt(pitft.backlight_off)
@@ -17,10 +15,16 @@ pitft.Button2Interrupt(pitft.backlight_low)
 pitft.Button3Interrupt(pitft.backlight_med)
 pitft.Button4Interrupt(pitft.backlight_high)
 
+
+
+# sys.dont_write_bytecode = True
+
 # set video and input to pitft
 os.putenv("SDL_FBDEV", "/dev/fb1")
 os.putenv('SDL_MOUSEDRV', 'TSLIB')
 os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+
+
 
 # initialize pygame and global variables
 pygame.init()
@@ -32,19 +36,31 @@ background = pygame.Surface(screen.get_size())
 clock = pygame.time.Clock()
 
 
-
-# This needs to be changed to a class
 def osk():
+
    screen.fill(cloud)
    exit  = my_button('exit', (187,  188, 60, 50), (125,103))
    enter = my_button('enter', (65,  188, 60, 50), (125,103))
    mouse = pygame.mouse.get_pos()
-   for btn in OSK_Keyboard_Buttons:
-        btn.draw(screen)
+   keyboard = [ 
+            my_button('1', (65,   35,  60, 50), (125,103), value='1'),
+            my_button('2', (126,  35,  60, 50), (125,103), value='2'),
+            my_button('3', (187,  35,  60, 50), (125,103), value='3'),
+            my_button('4', (65,   86,  60, 50), (125,103), value='4'),
+            my_button('5', (126,  86,  60, 50), (125,103), value='5'),
+            my_button('6', (187,  86,  60, 50), (125,103), value='6'),
+            my_button('7', (65,   137, 60, 50), (125,103), value='7'),
+            my_button('8', (126,  137, 60, 50), (125,103), value='8'),
+            my_button('9', (187,  137, 60, 50), (125,103), value='9'),
+            my_button('0', (126,  188, 60, 50), (125,103), value='0'), 
+   ]
+
+   for btn in keyboard:
+        btn.draw(screen, pygame.mouse.get_pos())
    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
    inp = ''
-   exit.draw(screen)
-   enter.draw(screen)
+   exit.draw(screen, mouse)
+   enter.draw(screen, mouse)
 
    while True:
       # screen.fill(cloud)
@@ -55,7 +71,7 @@ def osk():
             run = False
          elif event.type == pygame.MOUSEBUTTONUP:
             mouse = pygame.mouse.get_pos()
-            for btn in OSK_Keyboard_Buttons:
+            for btn in keyboard:
                if btn.obj.collidepoint(mouse):
                   inp = inp + btn.value
                   accn_input.value = inp
@@ -69,99 +85,58 @@ def osk():
                return
       accn = accn_input.update(events)
       accn_input.draw(screen)
+
       pygame.display.flip()
       pygame.event.wait
 
-class window_sprites():
-  def __init__(self):
-    self.open_osk_button = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
-    self.exit = my_button('Exit', (170, 185,  130, 40,), (125,103))
-    self.accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
-    self.title_text = Label(screen, 
-                      bg_color=purple, 
-                      font_color=cloud, 
-                      font_size = 40,
-                      background_size=(background.get_width(), 60),
-                      center=(background.get_width()/2, 60))
-    self.sub_title_text = Label(screen,
-                      bg_color=purple, 
-                      font_color=cloud, 
-                      font_size = 20,
-                      background_size=(background.get_width(), 25),
-                      center=(background.get_width()/2, 90), 
-                      align="center")
-    self.allSprites = pygame.sprite.OrderedUpdates(self.title_text, self.sub_title_text)
-  def draw(self):
-      self.accn_input.draw(screen)
-      self.allSprites.clear(screen, background)
-      self.allSprites.update()
-      self.allSprites.draw(screen)
-      self.open_osk_button.draw(screen)
-      self.exit.draw(screen)
-      pygame.display.flip()
-
-window_objects = window_sprites()
-
-
 def file_tube():
-    if debugging: print "---File Tube Function"
     accn = ''
-
+    pygame.mouse.set_pos(0,0)
     screen.fill(cloud)
-    window_objects.title_text.text = "File Tube"
-    window_objects.sub_title_text.text = ''
-    window_objects.sub_title_text.align = "center"
+    mouse = pygame.mouse.get_pos()
+    
+    exit= my_button('Exit', (170, 185,  130, 40,), (125,103))
+    OSk_BTN = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
+    
+    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
+    
+    title_text = Label(screen, 
+                  text="File Tube",
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 40,
+                  background_size=(background.get_width(), 60),
+                  center=(background.get_width()/2, 60))
+    location_text = Label(screen,
+                  bg_color=purple, 
+                  font_color=cloud, 
+                  font_size = 20,
+                  background_size=(background.get_width(), 25),
+                  center=(background.get_width()/2, 90), 
+                  align="center")
+
+
+    allSprites = pygame.sprite.OrderedUpdates(title_text, location_text)
 
     run = True
 
     while run:
-        if debugging: print 'looping'
         events = pygame.event.get()
         lastFiled = databaseFunctions.lastFiled()
-        
-        accn = window_objects.accn_input.update(events)
-
+        accn = accn_input.update(events)
+                
         loc = databaseFunctions.locateNext()
-        window_objects.sub_title_text.text = "Scan tube, then place here: "+ loc[3] + loc[0] + ": " + ROWS[loc[2]]  + "-" + loc[1]
+        location_text.text = "Scan tube, then place here: "+ loc[3] + loc[0] + ": " + ROWS[loc[2]]  + "-" + loc[1]
 
-        window_objects.draw()
-        pygame.event.wait
-        for event in events:
-             mouse = pygame.mouse.get_pos()
-             if debugging: 
-                print 'mouse position:  '
-                print mouse
-             if event.type == pygame.QUIT:
-                run = False
-             elif event.type == pygame.KEYDOWN:
-                if event.key == K_RETURN:
-                  databaseFunctions.fileAccn(accn)
-                  window_objects.accn_input.value = ''
-             elif event.type == pygame.MOUSEBUTTONUP:
-                if window_objects.exit.obj.collidepoint(mouse):
-                  if debugging: print ('exit pressed')
-                  return
-                elif window_objects.open_osk_button.obj.collidepoint(mouse):
-                    accn = osk()
-                    databaseFunctions.fileAccn(accn)
-                    window_objects.accn_input.value = ''
+        accn_input.draw(screen)
 
-def locate_tube():
-    if debugging: print "---Locate Tube Function"
-    accn = ''
+        allSprites.clear(screen, background)
+        allSprites.update()
+        allSprites.draw(screen)
 
-    screen.fill(cloud)
-    window_objects.title_text.text = "Locate Tube"
-    window_objects.sub_title_text.text = 'Which tube are you looking for?'
-    window_objects.sub_title_text.align = "center"
-
-    run = True
-
-    while run:
-        events = pygame.event.get()
-        accn = window_objects.accn_input.update(events)
-
-        window_objects.draw()
+        OSk_BTN.draw(screen, mouse)
+        exit.draw(screen, mouse)
+        pygame.display.flip()
 
         pygame.event.wait
         for event in events:
@@ -169,29 +144,25 @@ def locate_tube():
                 run = False
              elif event.type == pygame.KEYDOWN:
                 if event.key == K_RETURN: 
-                    search_result = databaseFunctions.findAccn(accn)
-                    if debugging: 
-                        print("Find Accn result:")
-                        print search_result
-                    window_objects.accn_input.value = ''
+                  databaseFunctions.fileAccn(accn)
+                  accn_input.value = ''
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
-                if window_objects.exit.obj.collidepoint(mouse):
+                if exit.obj.collidepoint(mouse):
+                   pygame.mouse.set_pos(0,0)
+                   screen.fill(cloud)
                    return
-                elif window_objects.open_osk_button.obj.collidepoint(mouse):
+                elif OSk_BTN.obj.collidepoint(mouse):
                     accn = osk()
-                    if accn != '':
-                      search_result = databaseFunctions.findAccn(accn)
-                      if debugging: 
-                        print("Find Accn result:")
-                        print search_result
-                      window_objects.accn_input.value = ''
-
-
+                    databaseFunctions.fileAccn(accn)
+                    accn_input.value = ''
+def locate_tube():
+ pass
 
 
 def main_menu():
-    if debugging:  print "---Main Menu"
+    
+    
     fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
     locateTube  = my_button('Locate',   (170, 125,  130, 40,), (125,133))
     settings    = my_button('Settings', (20,  185,  130, 40,), (125,163))
@@ -214,6 +185,8 @@ def main_menu():
                   background_size=(background.get_width(), 25),
                   center=(background.get_width()/2, 90), 
                   align="right")
+
+
     allSprites = pygame.sprite.OrderedUpdates(title, sub_title)
 
     while True:
@@ -224,29 +197,33 @@ def main_menu():
          elif event.type == pygame.MOUSEBUTTONUP:
             mouse = pygame.mouse.get_pos()
             if fileTube.obj.collidepoint(mouse):
-               if debugging: print('file pressed')
+               print('file pressed')
                file_tube()
             elif locateTube.obj.collidepoint(mouse):
-               if debugging: print('locate pressed')
+               print('locate pressed')
                locate_tube()
             elif settings.obj.collidepoint(mouse):
-               if debugging: print('settings pressed')
+               print('settings pressed')
                osk()
             elif exit.obj.collidepoint(mouse):
-               if debugging: print('exit pressed')
+               print('exit pressed')
                return
 
-      fileTube.draw(    screen)
-      locateTube.draw(  screen)
-      settings.draw(    screen)
-      exit.draw(        screen)
+      fileTube.draw(    screen, mouse)
+      locateTube.draw(  screen, mouse)
+      settings.draw(    screen, mouse)
+      exit.draw(        screen, mouse)
 
-      # allSprites.clear(screen, background)
+
+
+      allSprites.clear(screen, background)
       allSprites.update()
       allSprites.draw(screen)
+
+
+
       pygame.display.flip()
 
 if __name__ == '__main__':
-    if debugging: print "Started"
-    main_menu()
-    quitgame()
+   main_menu()
+   quitgame()
