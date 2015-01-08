@@ -75,14 +75,15 @@ def locateNext():
     rackNum = int(lastRow[0])
     col = int(lastRow[1])
     row = int(lastRow[2])
-  if col == 6 and row == 12:
-    col = 1
-    row = 1
-    rackNum += 1
-  elif col == 6 and row != 12:
-    col = 1
-    row += 1
-  elif col != 6:
+  if col == 6:
+    if row == 12:
+      col = 1
+      row = 1
+      rackNum += 1
+    else:
+      col = 1
+      row += 1
+  else:
     col += 1
   nextSpot = [str(rackNum), str(col), str(row), today[:3]]
   db.close()
@@ -166,11 +167,13 @@ def fileAccn(accn):
 
 def testDB():
   test = 0
+
   accn = "012546308014"
   while test < 10:
     fileAccn(accn)
     test +=1
   db = sqlite3.connect('racks.db')
+  cursor.execute("""CREATE TABLE IF NOT EXISTS tube_data (id INTEGER PRIMARY KEY, accn TEXT, rackNum TEXT, date TEXT, timeFiled TEXT, col TEXT, row TEXT)""")
   today = datetime.datetime.now().strftime("%a%m%d%Y")
   cursor = db.execute('SELECT max(id) FROM ' + today)
   max_id = cursor.fetchone()[0]
