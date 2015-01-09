@@ -1,9 +1,9 @@
-import sqlite3
-import sys
-import datetime
+import sys, datetime, sqlite3
 from pprint import pprint
 from time import time, gmtime, strftime, mktime, localtime
+
 sys.dont_write_bytecode = True
+
 ROWS = {'1':'A',
         '2':'B',
         '3':'C',
@@ -18,57 +18,87 @@ ROWS = {'1':'A',
         '12':'L'}
 
 class sqlite_database:
-  def __init__(self, db_file):
+  def __init__(self, db_file, rack_dimensions):
+    # self.db = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     self.db = sqlite3.connect(db_file)
-    self.db.execute("CREATE TABLE IF NOT EXISTS tube_data (id INTEGER PRIMARY KEY, accn TEXT, rackNum TEXT, timeFiled TIMESTAMP, col TEXT, row TEXT)")
+
+    self.db.execute("""
+      CREATE TABLE IF NOT EXISTS tube_data (
+        id          INTEGER    PRIMARY    KEY, 
+        accn        TEXT, 
+        rackNum     TEXT,
+        rackDate    DATE, 
+        col         TEXT, 
+        row         TEXT,
+        debug       TEXT,
+        timeFiled   TIMESTAMP) 
+      """)
+    
+    self.cursor         = self.db.execute('SELECT max(id) FROM tube_data')
+    self.max_id         = self.cursor.fetchone()[0]
+    self.column_width   = rack_dimensions['columns']
+    self.row_height     = rack_dimensions['rows']
+    self.days_stored    = 1
+
+    self.next_row       = None
+    self.next_rack      = None
+    self.next_column    = None
+    self.rack_date      = datetime.datetime.combine(datetime.date.today(), datetime.time())
+    self.locate_next()
+
+  def locate_next(self):
     self.cursor = self.db.execute('SELECT max(id) FROM tube_data')
     self.max_id = self.cursor.fetchone()[0]
+    print self.cursor.rowcount
+    if self.max_id == None:
+      print "omg fucking work"
+      self.max_id       = 0
+      self.next_row     = 1
+      self.next_column  = 1
+      self.next_rack    = 1
+      return;
+    self.cursor = self.db.execute('SELECT rackNum, col, row FROM tube_data where id is ' + str(self.max_id))
+    last_entry  = self.cursor.fetchone()
+    rack        = int(last_entry[0])
+    column      = int(last_entry[1])
+    row         = int(last_entry[2])
+    if column == self.column_width and row == self.row_height:
+      column  =   1
+      row     =   1
+      rack    +=  1
+    elif column == self.column_width and row != self.row_height:
+      column  = 1
+      row     += 1
+    elif column != self.column_width:
+      column += 1
 
-  def locateNext(self):
-    self.cursor = self.db.execute('SELECT max(id) FROM tube_data')
-    if self.max_id is None:
-      rackNum = 1
-      col = 0
-      row = 1
-    else:
-      self.cursor = self.db.execute('SELECT rackNum, col, row FROM tube_data where id is ' + str(self.max_id))
-      lastRow = self.cursor.fetchone()
-      rackNum = int(lastRow[0])
-      col = int(lastRow[1])
-      row = int(lastRow[2])
-    if col == 6 and row == 12:
-      col = 1
-      row = 1
-      rackNum += 1
-    elif col == 6 and row != 12:
-      col = 1
-      row += 1
-    elif col != 6:
-      col += 1
-    nextSpot = [str(rackNum), str(col), str(row)]
+    nextSpot = [str(rack), str(column), str(row)]
+    self.next_row     = row
+    self.next_rack    = rack
+    self.next_column  = column
     return nextSpot
     
-  def findAccn(self, accn):
+  def find_accn(self, accn):
     self.cursor = self.db.cursor()
-    today = int(mktime(datetime.date.today().timetuple()))
-    yesterday = int(mktime((datetime.date.today() - datetime.timedelta(1)).timetuple()))
-    twoDaysAgo = int(mktime((datetime.date.today() - datetime.timedelta(2)).timetuple()))
-    print "Today", today
-    dates = [today, yesterday, twoDaysAgo]
     rows = []
-    for date in dates:
-      try:
-        self.cursor.execute("SELECT id, rackNum, col, row FROM tube_data WHERE accn == '"+accn+"' AND timeFiled >= datetime(" + str(date) + ", 'unixepoch', 'localtime') AND timeFiled <= datetime(" + str(date + 86399) + ", 'unixepoch', 'localtime') ORDER BY id DESC")
-      except sqlite3.Error as e:
-        print "SQLite Error:", e.args[0]
-      else:
-        for thing in self.cursor:
-          # print thing
-          rows.append(thing + (strftime("%m%d%y", localtime(date)),))
-    pprint(rows)
+    # this gets a datetime of midnight a few days ago. 
+    earliest_date = datetime.datetime.combine(datetime.date.today() - datetime.timedelta(self.days_stored), datetime.time())
+    print earliest_date
+    try:
+      self.cursor.execute("""
+        SELECT id, accn, rackNum, col, row, timeFiled, debug FROM tube_data WHERE accn == ? AND 
+        rackDate >= DATE(?) ORDER BY id DESC""",(accn, earliest_date,))
+    except sqlite3.Error as e:
+      print "SQLite Error:", e.args[0]
+      #this might not be needed, returning "self.cursor" might work. 
+    for thing in self.cursor:
+      print thing
+      rows.append(thing)
+    for row in rows:
+      pprint(row)
     return rows
 
-  def findAll(self):
+  def find_all(self):
     self.cursor = self.db.cursor()
     today = int(mktime(datetime.date.today().timetuple()))
     yesterday = int(mktime((datetime.date.today() - datetime.timedelta(1)).timetuple()))
@@ -93,29 +123,24 @@ class sqlite_database:
       rows.append(setRows.pop())
     return rows
 
-  def fileAccn(self, accn):
-    loc = self.locateNext()
-    timeFiled = datetime.datetime.now()
-    self.cursor = self.db.execute("INSERT INTO tube_data (accn, rackNum, timeFiled, col, row) VALUES(?,?,?,?,?)", (accn, loc[0], timeFiled, loc[1], loc[2]))
+  def file_accn(self, accn):
+    self.locate_next()
+    time_filed = time()
+    print time_filed
+    self.db.execute("INSERT INTO tube_data (accn, rackNum, rackDate, timeFiled, col, row) VALUES(?,?,?,?,?,?)", 
+                    (accn, self.next_rack, self.rack_date, time_filed, self.next_column, self.next_row))
     self.db.commit()
-
-  def lastFiled(self):
-    # max_id = self.cursor.fetchone()[0]
-    if self.max_id is None:
-      return None
-    else:
-      self.cursor = self.db.execute('SELECT rackNum, col, row, accn FROM tube_data where id is ' + str(self.max_id))
-      lastFiled = self.cursor.fetchone()
-      return lastFiled
 
 def testDB(dbclass):
   test = 0
   accn = "012546308014"
   while test < 10:
-    dbclass.fileAccn(accn)
+    dbclass.file_accn(accn)
+    print "file loop"
     test +=1
-  pprint(dbclass.findAccn(accn))
+  pprint(dbclass.find_accn(accn))
 
+# this function is to remove an item from a tuple, not really a database function
 def tuple_without(original_tuple, element_to_remove):
     new_tuple = []
     for s in list(original_tuple):
@@ -125,19 +150,11 @@ def tuple_without(original_tuple, element_to_remove):
 
 
 if __name__ == '__main__':
-  test = sqlite_database('racks.db')
-  test.fileAccn("123456")
-  testDB(test)
-  test.findAccn("123456")
-  # test.findAll()
+  rack_dimensions = {'columns': 6, 'rows': 12}
+  test = sqlite_database('racks.db', rack_dimensions)
+  print "file_accn function"
+  test.file_accn("98765")
+  print "find accn"
+  test.find_accn("98765")
+  # test.find_all()
   test.db.close()
-
-
-
-  # db = sqlite3.connect('racks.db')
-  
-  # db.close()
-  # testDB()
-
-
-
