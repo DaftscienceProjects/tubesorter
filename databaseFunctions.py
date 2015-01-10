@@ -62,14 +62,15 @@ class sqlite_database:
     rack        = int(last_entry[0])
     column      = int(last_entry[1])
     row         = int(last_entry[2])
-    if column == self.column_width and row == self.row_height:
-      column  =   1
-      row     =   1
-      rack    +=  1
-    elif column == self.column_width and row != self.row_height:
-      column  = 1
-      row     += 1
-    elif column != self.column_width:
+    if column == self.column_width: 
+      if row == self.row_height:
+        column  =   1
+        row     =   1
+        rack    +=  1
+      else:
+        column  = 1
+        row     += 1
+    else:
       column += 1
 
     nextSpot = [str(rack), str(column), str(row)]
@@ -110,8 +111,8 @@ class sqlite_database:
     for date in dates:
       try:
         self.cursor.execute("SELECT id, accn FROM tube_data WHERE timeFiled >= datetime(" + str(date) + ", 'unixepoch', 'localtime') AND timeFiled <= datetime(" + str(date + 86399) + ", 'unixepoch', 'localtime')s ORDER BY id ASC")
-      except sqlite3.OperationalError:
-        print "SQLite DB locked"
+      except sqlite3.Error as e:
+        print "SQLite Error:", e.args[0];
       else:
         for item in self.cursor:
           print item
