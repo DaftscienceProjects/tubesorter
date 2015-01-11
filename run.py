@@ -1,5 +1,6 @@
-import pygame, os, time, random, sys, eztext, databaseFunctions
+import pygame, os, time, random, sys, eztext
 from tubesorter_UI import *
+from databaseFunctions import *
 # from font import *
 import RPi.GPIO as GPIO
 from piTFT import *
@@ -89,7 +90,7 @@ def osk():
       pygame.display.flip()
       pygame.event.wait
 
-def file_tube():
+def file_tube(db):
     accn = ''
     pygame.mouse.set_pos(0,0)
     screen.fill(cloud)
@@ -122,11 +123,14 @@ def file_tube():
 
     while run:
         events = pygame.event.get()
-        lastFiled = databaseFunctions.lastFiled()
         accn = accn_input.update(events)
-                
-        loc = databaseFunctions.locateNext()
-        location_text.text = "Scan tube, then place here: "+ loc[3] + loc[0] + ": " + ROWS[loc[2]]  + "-" + loc[1]
+
+        row = ROWS[str(db.next_row)]
+        rack = str(db.next_rack)
+        column = str(db.next_column)
+
+        print(row+column+rack)
+        location_text.text = "Scan tube, then place here: Rack"+rack+": "+row+"-"+column
 
         accn_input.draw(screen)
 
@@ -144,7 +148,7 @@ def file_tube():
                 run = False
              elif event.type == pygame.KEYDOWN:
                 if event.key == K_RETURN: 
-                  databaseFunctions.fileAccn(accn)
+                  db.file_accn(accn)
                   accn_input.value = ''
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
@@ -154,13 +158,13 @@ def file_tube():
                    return
                 elif OSk_BTN.obj.collidepoint(mouse):
                     accn = osk()
-                    databaseFunctions.fileAccn(accn)
+                    db.file_accn(accn)
                     accn_input.value = ''
 def locate_tube():
  pass
 
 
-def main_menu():
+def main_menu(db):
     
     
     fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
@@ -198,10 +202,10 @@ def main_menu():
             mouse = pygame.mouse.get_pos()
             if fileTube.obj.collidepoint(mouse):
                print('file pressed')
-               file_tube()
+               file_tube(db)
             elif locateTube.obj.collidepoint(mouse):
                print('locate pressed')
-               locate_tube()
+               locate_tube(db)
             elif settings.obj.collidepoint(mouse):
                print('settings pressed')
                osk()
@@ -225,5 +229,7 @@ def main_menu():
       pygame.display.flip()
 
 if __name__ == '__main__':
-   main_menu()
-   quitgame()
+  rack_dimensions = {'columns': 6, 'rows': 12}
+  db = sqlite_database('racks.db', rack_dimensions)
+  main_menu(db)
+  quitgame()
