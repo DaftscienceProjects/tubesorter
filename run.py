@@ -1,6 +1,6 @@
 import pygame, os, time, random, sys, eztext
 from tubesorter_UI import *
-from databaseFunctions import *
+from database_functions import *
 # from font import *
 import RPi.GPIO as GPIO
 from piTFT import *
@@ -79,11 +79,14 @@ def osk():
             if enter.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
                screen.fill(cloud)
-               return accn_input.value
+               if accn_input.value == '':
+                  return None
+               else:
+                 return accn_input.value
             if exit.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
                screen.fill(cloud)
-               return
+               return None
       accn = accn_input.update(events)
       accn_input.draw(screen)
 
@@ -158,8 +161,10 @@ def file_tube(db):
                    return
                 elif OSk_BTN.obj.collidepoint(mouse):
                     accn = osk()
-                    db.file_accn(accn)
-                    accn_input.value = ''
+                    if accn:
+                      db.file_accn(accn)
+                    else:
+                      accn_input.value = ''
 def locate_tube():
  pass
 
