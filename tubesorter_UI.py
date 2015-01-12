@@ -13,6 +13,7 @@ yellow = (241, 196, 15)
 cloud = (236, 240, 241)
 asphalt = (52, 73, 94)
 concrete = (149, 165, 166)
+transparent = (0,0,0,0)
 
 ROWS = {'1':'A',
         '2':'B',

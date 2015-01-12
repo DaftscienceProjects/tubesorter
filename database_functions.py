@@ -40,6 +40,7 @@ class sqlite_database:
     self.row_height     = rack_dimensions['rows']
     self.days_stored    = 1
 
+    self.last_stored    = 'Not Available'
     self.next_row       = None
     self.next_rack      = None
     self.next_column    = None
@@ -131,6 +132,7 @@ class sqlite_database:
     self.db.execute("INSERT INTO tube_data (accn, rackNum, rackDate, timeFiled, col, row) VALUES(?,?,?,?,?,?)", 
                     (accn, self.next_rack, self.rack_date, time_filed, self.next_column, self.next_row))
     self.db.commit()
+    self.last_stored = accn
     self.locate_next()
 
 def testDB(dbclass):

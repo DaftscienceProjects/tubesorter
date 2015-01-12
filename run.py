@@ -102,25 +102,35 @@ def file_tube(db):
     exit= my_button('Exit', (170, 185,  130, 40,), (125,103))
     OSk_BTN = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
     
-    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn#: ', x=2, y=2)
+    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn #: ', x=2, y=2)
     
-    title_text = Label(screen, 
+    title_text = Label(
+                  screen, 
                   text="File Tube",
                   bg_color=purple, 
                   font_color=cloud, 
                   font_size = 40,
                   background_size=(background.get_width(), 60),
                   center=(background.get_width()/2, 60))
-    location_text = Label(screen,
+    location_text = Label(
+                  screen,
                   bg_color=purple, 
                   font_color=cloud, 
                   font_size = 20,
                   background_size=(background.get_width(), 25),
                   center=(background.get_width()/2, 90), 
                   align="center")
+    last_accn_text = Label(
+                  screen,
+                  bg_color=cloud,
+                  transparent=True, 
+                  font_color=asphalt, 
+                  font_size = 22,
+                  background_size=(background.get_width(), 25),
+                  center=(background.get_width()/2, 120), 
+                  align="left")
 
-
-    allSprites = pygame.sprite.OrderedUpdates(title_text, location_text)
+    allSprites = pygame.sprite.OrderedUpdates(title_text, location_text, last_accn_text)
 
     run = True
 
@@ -134,7 +144,7 @@ def file_tube(db):
 
         print(row+column+rack)
         location_text.text = "Scan tube, then place here: Rack"+rack+": "+row+"-"+column
-
+        last_accn_text.text = " Last accn filed: " + db.last_stored
         accn_input.draw(screen)
 
         allSprites.clear(screen, background)
