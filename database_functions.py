@@ -48,15 +48,17 @@ class sqlite_database:
 
   def locate_next(self):
     self.cursor = self.db.execute('SELECT max(id) FROM tube_data')
-    self.max_id = self.cursor.fetchone()[0]
-    print self.cursor.rowcount
+    self.max_id = self.cursor.fetchone()
     if self.max_id is None:
-      print "omg fucking work"
+      print "Empty DB?"
       self.max_id       = 0
       self.next_row     = 1
       self.next_column  = 1
       self.next_rack    = 1
       return;
+    else:
+      self.max_id = self.max_id[0]
+
     self.cursor = self.db.execute('SELECT rackNum, col, row FROM tube_data where id is ' + str(self.max_id))
     last_entry  = self.cursor.fetchone()
     rack        = int(last_entry[0])
