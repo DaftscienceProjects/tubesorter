@@ -103,7 +103,7 @@ def file_tube(db):
     OSk_BTN = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
     
     accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn #: ', x=2, y=2)
-    accn_input.set_font("dejavusans")
+    # accn_input.set_font("dejavusans")
     
     title_text = Label(
                   screen, 
