@@ -50,7 +50,7 @@ class sqlite_database:
     self.cursor = self.db.execute('SELECT max(id) FROM tube_data')
     self.max_id = self.cursor.fetchone()[0]
     print self.cursor.rowcount
-    if self.max_id == None:
+    if self.max_id is None:
       print "omg fucking work"
       self.max_id       = 0
       self.next_row     = 1
