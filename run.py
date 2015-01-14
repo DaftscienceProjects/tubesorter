@@ -1,10 +1,27 @@
-import pygame, os, time, random, sys, eztext
+
+# Things to fix-----------------------------------
+# Imports need to be cleaned up:
+#          the import * from whatevers in some includes are spilling into this file
+# Timzone issues may be happening, I'm not sure
+# In the database_functions.py Locate_next needs to check if it is a new day
+#           it then needs to update the rack information
+# fix the issue with new databases and filing the second tube. Something weird is happening
+# Clean up database fileds, maybe
+# when typing accns with keyboard they don't clear after hitting enter
+# add a backspace button to the on screen keyboard
+#
+#
+
+
+import pygame, os, time, random, sys, eztext, datetime
 from tubesorter_UI import *
+from constants import *
 from database_functions import *
-# from font import *
 import RPi.GPIO as GPIO
 from piTFT import *
 from label import Label
+from pygame.locals import K_RETURN
+
 
 
 # Initialize touchscreen
@@ -38,8 +55,7 @@ clock = pygame.time.Clock()
 
 
 def osk():
-
-   screen.fill(cloud)
+   screen.fill(CLOUD)
    exit  = my_button('exit', (187,  188, 60, 50), (125,103))
    enter = my_button('enter', (65,  188, 60, 50), (125,103))
    mouse = pygame.mouse.get_pos()
@@ -58,7 +74,7 @@ def osk():
 
    for btn in keyboard:
         btn.draw(screen, pygame.mouse.get_pos())
-   accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn #: ', x=2, y=2)
+   accn_input = eztext.Input(maxlength=20, color=ASPHALT, prompt='Accn #: ', x=2, y=2)
    inp = ''
    exit.draw(screen, mouse)
    enter.draw(screen, mouse)
@@ -78,14 +94,14 @@ def osk():
                   accn_input.value = inp
             if enter.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
-               screen.fill(cloud)
+               screen.fill(CLOUD)
                if accn_input.value == '':
                   return None
                else:
                  return accn_input.value
             if exit.obj.collidepoint(mouse):
                pygame.mouse.set_pos(0,0)
-               screen.fill(cloud)
+               screen.fill(CLOUD)
                return None
       accn = accn_input.update(events)
       accn_input.draw(screen)
@@ -96,63 +112,26 @@ def osk():
 def file_tube(db):
     accn = ''
     pygame.mouse.set_pos(0,0)
-    screen.fill(cloud)
+    screen.fill(CLOUD)
     mouse = pygame.mouse.get_pos()
     
-    exit= my_button('Exit', (170, 185,  130, 40,), (125,103))
-    OSk_BTN = my_button('Keyboard', (20,  185,  130, 40,), (125,163))
-    
-    accn_input = eztext.Input(maxlength=20, color=asphalt, prompt='Accn #: ', x=2, y=2)
-    
-    title_text = Label(
-                  screen, 
-                  text="File Tube",
-                  bg_color=purple, 
-                  font_color=cloud, 
-                  font_size = 40,
-                  background_size=(background.get_width(), 60),
-                  center=(background.get_width()/2, 60))
-    location_text = Label(
-                  screen,
-                  bg_color=purple, 
-                  font_color=cloud, 
-                  font_size = 20,
-                  background_size=(background.get_width(), 25),
-                  center=(background.get_width()/2, 90), 
-                  align="center")
-    last_accn_text = Label(
-                  screen,
-                  bg_color=cloud,
-                  transparent=True, 
-                  font_color=asphalt, 
-                  font_size = 22,
-                  background_size=(background.get_width(), 25),
-                  center=(background.get_width()/2, 120), 
-                  align="left")
-
-    allSprites = pygame.sprite.OrderedUpdates(title_text, location_text, last_accn_text)
+    file_screen = app_screen(screen,  background, "File Tube")
 
     run = True
 
     while run:
         events = pygame.event.get()
-        accn = accn_input.update(events)
+        accn = file_screen.check_scanner(events)
 
         row = ROWS[str(db.next_row)]
         rack = str(db.next_rack)
         column = str(db.next_column)
+        day = strftime('%a', localtime(db.rack_date))
 
-        print(row+column+rack)
-        location_text.text = "Scan tube, then place here: Rack"+rack+": "+row+"-"+column
-        last_accn_text.text = " Last accn filed: " + db.last_stored
-        accn_input.draw(screen)
 
-        allSprites.clear(screen, background)
-        allSprites.update()
-        allSprites.draw(screen)
-
-        OSk_BTN.draw(screen, mouse)
-        exit.draw(screen, mouse)
+        file_screen.subtitle_text.text = "Scan tube, then place here: "+day+rack+": "+row+"-"+column
+        file_screen.info_text.text = "Last accn filed: " + db.last_stored
+        file_screen.draw()
         pygame.display.flip()
 
         pygame.event.wait
@@ -162,46 +141,105 @@ def file_tube(db):
              elif event.type == pygame.KEYDOWN:
                 if event.key == K_RETURN: 
                   db.file_accn(accn)
-                  accn_input.value = ''
+                  file_screen.accn_input.value = ''
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
-                if exit.obj.collidepoint(mouse):
+                if file_screen.exit.obj.collidepoint(mouse):
                    pygame.mouse.set_pos(0,0)
-                   screen.fill(cloud)
+                   screen.fill(CLOUD)
                    return
-                elif OSk_BTN.obj.collidepoint(mouse):
+                elif file_screen.osk_btn.obj.collidepoint(mouse):
                     accn = osk()
                     if accn:
                       db.file_accn(accn)
                     else:
-                      accn_input.value = ''
-def locate_tube():
- pass
+                      file_screen.accn_input.value = ''
 
+def locate_tube(db):
+    accn = ''
+    pygame.mouse.set_pos(0,0)
+    screen.fill(CLOUD)
+    mouse = pygame.mouse.get_pos()
+    found = None
+    locate_screen = app_screen(screen,  background, "Locate Tube")
+    locate_screen.subtitle_text.text = "Scan or Enter an accn # to locate"
+    locate_screen.info_text.text = ""
+
+
+    list_of_locations = multi_line_textbox(screen,rect=[210, 108, 100, 77], font=None, font_size=22, string='')
+
+
+    run = True
+
+    while run:
+        events = pygame.event.get()
+        accn = locate_screen.check_scanner(events)
+        locate_screen.draw()
+        list_of_locations.update()
+        pygame.display.flip()
+        
+
+        pygame.event.wait
+
+
+        for event in events:
+             if event.type == pygame.QUIT:
+                run = False
+             elif event.type == pygame.KEYDOWN:
+                if event.key == K_RETURN: 
+                  found = db.find_accn(accn)
+             elif event.type == pygame.MOUSEBUTTONUP:
+                mouse = pygame.mouse.get_pos()
+                if locate_screen.exit.obj.collidepoint(mouse):
+                   pygame.mouse.set_pos(0,0)
+                   screen.fill(CLOUD)
+                   return
+                elif locate_screen.osk_btn.obj.collidepoint(mouse):
+                    accn = osk()
+                    if accn:
+                      found = db.find_accn(accn)
+             if found:
+                list_of_locations.string=''
+                count = 0
+                pprint(found)
+                for row in found:
+                  if count < 3:
+                    list_of_locations.string += strftime('%a', localtime(row[5]))+":"+row[2]+'  '+ROWS[row[4]]+'-'+row[3]+'\n'
+                    print strftime('%a', localtime(row[5]))
+                    # print strftime("%a", row[5])
+                    for item in row:
+                      print item
+                    print '---------'
+                  count +=1
+                locate_screen.info_text.text = "Last 3 locations for "+accn+":"
+                locate_screen.accn_input.value = ''
+                print list_of_locations.string
+                found = False
+
+                  
 
 def main_menu(db):
+
+    fileTube    = my_button('File',     (3,  125,  155, 40,), (125,103))
+    locateTube  = my_button('Locate',   (162, 125,  155, 40,), (125,133))
+    settings    = my_button('Settings', (3,  185,  155, 40,), (125,163))
+    exit        = my_button('Exit',     (162, 185,  155, 40,), (125,103))
     
-    
-    fileTube    = my_button('File',     (20,  125,  130, 40,), (125,103))
-    locateTube  = my_button('Locate',   (170, 125,  130, 40,), (125,133))
-    settings    = my_button('Settings', (20,  185,  130, 40,), (125,163))
-    exit        = my_button('Exit',     (170, 185,  130, 40,), (125,103))
-    
-    screen.fill(cloud)
+    screen.fill(CLOUD)
 
     title = Label(screen, 
                   text="Pi-Tube Ledger",
-                  bg_color=purple, 
-                  font_color=cloud, 
+                  bg_color=PURPLE, 
+                  font_color=CLOUD, 
                   font_size = 40,
-                  background_size=(background.get_width(), 60),
+                  background_size=(314, 60),
                   center=(background.get_width()/2, 60))
     sub_title = Label(screen, 
                   text="beta  ",
-                  bg_color=purple, 
-                  font_color=cloud, 
+                  bg_color=PURPLE, 
+                  font_color=CLOUD, 
                   font_size = 20,
-                  background_size=(background.get_width(), 25),
+                  background_size=(314, 25),
                   center=(background.get_width()/2, 90), 
                   align="right")
 
@@ -243,8 +281,15 @@ def main_menu(db):
 
       pygame.display.flip()
 
+
+
 if __name__ == '__main__':
   rack_dimensions = {'columns': 6, 'rows': 12}
   db = sqlite_database('racks.db', rack_dimensions)
   main_menu(db)
+  # locate_tube(db)
+
+
+
+
   quitgame()

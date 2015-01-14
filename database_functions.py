@@ -1,21 +1,10 @@
 import sys, datetime, sqlite3
 from pprint import pprint
+from constants import *
 from time import time, gmtime, strftime, mktime, localtime
 
 sys.dont_write_bytecode = True
 
-ROWS = {'1':'A',
-        '2':'B',
-        '3':'C',
-        '4':'D',
-        '5':'E',
-        '6':'F',
-        '7':'G',
-        '8':'H',
-        '9':'I',
-        '10':'J',
-        '11':'K',
-        '12':'L'}
 
 class sqlite_database:
   def __init__(self, db_file, rack_dimensions):
@@ -27,24 +16,25 @@ class sqlite_database:
         id          INTEGER    PRIMARY    KEY, 
         accn        TEXT, 
         rackNum     TEXT,
-        rackDate    DATE, 
+        rackDate    INT, 
         col         TEXT, 
         row         TEXT,
         debug       TEXT,
-        timeFiled   TIMESTAMP) 
+        timeFiled   INT) 
       """)
     
     self.cursor         = self.db.execute('SELECT max(id) FROM tube_data')
     self.max_id         = self.cursor.fetchone()[0]
     self.column_width   = rack_dimensions['columns']
     self.row_height     = rack_dimensions['rows']
-    self.days_stored    = 1
+    self.days_stored    = 4
 
     self.last_stored    = 'Not Available'
     self.next_row       = None
     self.next_rack      = None
     self.next_column    = None
-    self.rack_date      = datetime.datetime.combine(datetime.date.today(), datetime.time())
+    # self.rack_date      = datetime.datetime.combine(datetime.date.today(), datetime.time())
+    self.rack_date      = int(time())
     self.locate_next()
 
   def locate_next(self):
@@ -52,7 +42,6 @@ class sqlite_database:
     self.max_id = self.cursor.fetchone()[0]
     print self.cursor.rowcount
     if self.max_id is None:
-      print "omg fucking work"
       self.max_id       = 0
       self.next_row     = 1
       self.next_column  = 1
@@ -80,24 +69,26 @@ class sqlite_database:
     self.next_column  = column
     return nextSpot
     
+
+
   def find_accn(self, accn):
     self.cursor = self.db.cursor()
     rows = []
+
     # this gets a datetime of midnight a few days ago. 
     earliest_date = datetime.datetime.combine(datetime.date.today() - datetime.timedelta(self.days_stored), datetime.time())
+    earliest_date_epoch = earliest_date.strftime('%s')
+    print earliest_date_epoch+"earliest epoch"
+
     print earliest_date
     try:
       self.cursor.execute("""
-        SELECT id, accn, rackNum, col, row, timeFiled, debug FROM tube_data WHERE accn == ? AND 
-        rackDate >= DATE(?) ORDER BY id DESC""",(accn, earliest_date,))
+        SELECT id, accn, rackNum, col, row, timeFiled, rackDate, debug FROM tube_data WHERE accn == ? AND 
+        rackDate >= ? ORDER BY id DESC""",(accn, earliest_date_epoch,))
     except sqlite3.Error as e:
       print "SQLite Error:", e.args[0]
-      #this might not be needed, returning "self.cursor" might work. 
     for thing in self.cursor:
-      print thing
       rows.append(thing)
-    for row in rows:
-      pprint(row)
     return rows
 
   def find_all(self):
@@ -127,7 +118,7 @@ class sqlite_database:
 
   def file_accn(self, accn):
     self.locate_next()
-    time_filed = time()
+    time_filed = int(time())
     print time_filed
     self.db.execute("INSERT INTO tube_data (accn, rackNum, rackDate, timeFiled, col, row) VALUES(?,?,?,?,?,?)", 
                     (accn, self.next_rack, self.rack_date, time_filed, self.next_column, self.next_row))
