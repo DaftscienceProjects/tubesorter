@@ -43,7 +43,7 @@ class Input:
 
     def draw(self, surface):
         """ Draw the text input to a surface """
-        text = self.font.render(self.prompt+self.value, 1, self.color)
+        text = self.font.render(self.prompt+self.value, True, self.color)
         surface.blit(text, (self.x, self.y))
 
     def update(self, events):

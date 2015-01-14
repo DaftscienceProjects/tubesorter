@@ -1,5 +1,5 @@
 import pygame 
-from tubesorter_UI import red, blue, teal, purple, green, orange, yellow, cloud, asphalt, concrete   
+from constants import *
 import sys
 
 sys.dont_write_bytecode = True
@@ -9,10 +9,11 @@ class Label(pygame.sprite.Sprite):
     def __init__(   self, 
                     screen,
                     text=None, 
-                    bg_color=cloud, 
-                    font_color=purple, 
+                    bg_color=CLOUD,
+                    transparent = False,
+                    font_color=PURPLE, 
                     font=None, 
-                    font_size=24, 
+                    font_size=24,
                     background_size=None, 
                     center=None, 
                     align="Center"):
@@ -22,15 +23,15 @@ class Label(pygame.sprite.Sprite):
         self.background = pygame.Surface(self.screen.get_size())
         self.font = pygame.font.SysFont(font, font_size)
         self.text = text
+        self.padding = 6
+        self.transparent = False
         self.fgColor = font_color
         self.bgColor = bg_color
         self.align = align
-
         if center:
             self.center = center
         else:
             self.center = (self.background.get_width()/2, self.background.get_height()/2)
-        
         if background_size:
             self.size = background_size
         else:    
@@ -40,7 +41,10 @@ class Label(pygame.sprite.Sprite):
 
     def update(self):
         self.image = pygame.Surface(self.size)
-        self.image.fill(self.bgColor)
+        if self.transparent:
+            self.image.fill(TRANSPARENT)
+        else:
+            self.image.fill(self.bgColor)
         fontSurface = self.font.render(self.text, True, self.fgColor, self.bgColor)
         if self.align =='left':
             fontRect = fontSurface.get_rect()
