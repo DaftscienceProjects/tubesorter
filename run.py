@@ -13,14 +13,14 @@
 #
 
 
-import pygame, os, time, random, sys, eztext, datetime
-from tubesorter_UI import *
-from constants import *
-from database_functions import *
+import pygame, os, time, random, sys, datetime
 import RPi.GPIO as GPIO
+
+from constants import *
+from tubesorter_UI import *
+from database_functions import *
 from piTFT import *
-from label import Label
-from pygame.locals import K_RETURN
+
 
 
 
@@ -35,23 +35,17 @@ pitft.Button4Interrupt(pitft.backlight_high)
 
 
 
-# sys.dont_write_bytecode = True
+sys.dont_write_bytecode = True
 
 # set video and input to pitft
-os.putenv("SDL_FBDEV", "/dev/fb1")
-os.putenv('SDL_MOUSEDRV', 'TSLIB')
-os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+
 
 
 
 # initialize pygame and global variables
 pygame.init()
-display_width = 320
-display_height = 240
 pygame.mouse.set_visible(False)
-screen = pygame.display.set_mode((display_width, display_height))
-background = pygame.Surface(screen.get_size())
-clock = pygame.time.Clock()
+
 
 
 def osk():
@@ -74,7 +68,7 @@ def osk():
 
    for btn in keyboard:
         btn.draw(screen, pygame.mouse.get_pos())
-   accn_input = eztext.Input(maxlength=20, color=ASPHALT, prompt='Accn #: ', x=2, y=2)
+   accn_input = text_prompt(maxlength=20, color=ASPHALT, prompt='Accn #: ', x=2, y=2)
    inp = ''
    exit.draw(screen, mouse)
    enter.draw(screen, mouse)
@@ -104,7 +98,7 @@ def osk():
                screen.fill(CLOUD)
                return None
       accn = accn_input.update(events)
-      accn_input.draw(screen)
+      accn_input.draw()
 
       pygame.display.flip()
       pygame.event.wait
@@ -130,7 +124,8 @@ def file_tube(db):
 
 
         file_screen.subtitle_text.text = "Scan tube, then place here: "+day+rack+": "+row+"-"+column
-        file_screen.info_text.text = "Last accn filed: " + db.last_stored
+        if db.last_stored:
+          file_screen.info_text.text = "Last accn filed: " + db.last_stored
         file_screen.draw()
         pygame.display.flip()
 
@@ -139,9 +134,9 @@ def file_tube(db):
              if event.type == pygame.QUIT:
                 run = False
              elif event.type == pygame.KEYDOWN:
-                if event.key == K_RETURN: 
+                if event.key == pygame.K_RETURN: 
                   db.file_accn(accn)
-                  file_screen.accn_input.value = ''
+                  print "return pressed"+file_screen.accn_input.value+"<--number here?"
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()
                 if file_screen.exit.obj.collidepoint(mouse):
@@ -186,7 +181,7 @@ def locate_tube(db):
              if event.type == pygame.QUIT:
                 run = False
              elif event.type == pygame.KEYDOWN:
-                if event.key == K_RETURN: 
+                if event.key == pygame.K_RETURN: 
                   found = db.find_accn(accn)
              elif event.type == pygame.MOUSEBUTTONUP:
                 mouse = pygame.mouse.get_pos()

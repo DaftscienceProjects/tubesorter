@@ -28,6 +28,7 @@ class Label(pygame.sprite.Sprite):
         self.fgColor = font_color
         self.bgColor = bg_color
         self.align = align
+
         if center:
             self.center = center
         else:
