@@ -165,7 +165,7 @@ def file_tube(db):
                       db.file_accn(accn)
                     else:
                       accn_input.value = ''
-def locate_tube():
+def locate_tube(db):
  pass
 
 
